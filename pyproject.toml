@@ -1,0 +1,28 @@
+[project]
+name = "ai-value-investor"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "duckdb>=1.5.2",
+    "finnhub-python>=2.4.28",
+    "langchain>=1.2.15",
+    "langchain-anthropic>=1.4.2",
+    "langchain-google-genai>=4.2.2",
+    "langchain-ollama>=1.1.0",
+    "langchain-openai>=1.2.1",
+    "langchain-tavily>=0.2.18",
+    "langgraph>=1.1.10",
+    "pandas>=3.0.2",
+    "python-dotenv>=1.2.2",
+    "requests>=2.33.1",
+    "rich>=15.0.0",
+    "streamlit>=1.57.0",
+    "tabulate>=0.10.0",
+]
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.1.1",
+]
