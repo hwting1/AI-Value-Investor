@@ -1,4 +1,3 @@
-import os
 import textwrap
 from tabulate import tabulate
 from dotenv import load_dotenv
@@ -9,10 +8,11 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.graph import START, END, StateGraph
 from langgraph.types import Send
 from ingest import load_config
-from config import agent_config, fundamentals_system_prompt, moat_system_prompt, risk_system_prompt
-from schema import FundamentalsSchema, MoatSchema, RiskSchema
-from state import State, FundamentalsState, MoatState, RiskState
-from tools import ingest_ticker_tool, query_metrics_tool
+from .schema import FundamentalsSchema, MoatSchema, RiskSchema
+from .state import State, FundamentalsState, MoatState, RiskState
+from .tools import ingest_ticker_tool, query_metrics_tool
+from config import agent_config
+from .system_prompts import fundamentals_system_prompt, moat_system_prompt, risk_system_prompt
 
 load_dotenv()
 load_config()
@@ -284,7 +284,7 @@ def route_after_fundamentals(state: State):
     f = state["fundamentals_result"]
     if not f.stock_exists:
         return "end_not_found"
-    if f.total_score < 4:
+    if f.total_score < 3:
         return "end_low_score"
     return [
         Send("run_moat_research", {"ticker": state["ticker"]}),

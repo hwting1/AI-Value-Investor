@@ -1,9 +1,7 @@
 from typing import Annotated, List, Optional, TypedDict
-
 from langchain_core.messages import AnyMessage
 from langgraph.graph import add_messages
-
-from schema import FundamentalsSchema, MoatSchema, RiskSchema
+from .schema import FundamentalsSchema, MoatSchema, RiskSchema
 
 
 class State(TypedDict):

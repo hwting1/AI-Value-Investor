@@ -1,5 +1,5 @@
 import streamlit as st
-from agent import main_graph
+from src.agent import main_graph
 
 st.set_page_config(page_title="AI Value Investor", page_icon="📈", layout="wide")
 
@@ -39,7 +39,7 @@ if submitted:
                     progress.update(label="Ticker not found.", state="error", expanded=False)
                     st.error(f"**{ticker}** does not exist in the American market.")
                     st.stop()
-                if f and f.total_score < 4:
+                if f and f.total_score < 3:
                     progress.update(label=f"Low score ({f.total_score:.1f}/6). Research stopped.", state="complete", expanded=False)
 
             elif node in ("run_moat_research", "moat_research"):
