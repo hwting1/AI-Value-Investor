@@ -1,4 +1,5 @@
 import streamlit as st
+
 from src.agent import main_graph
 
 st.set_page_config(page_title="AI Value Investor", page_icon="📈", layout="wide")

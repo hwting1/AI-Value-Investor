@@ -1,18 +1,25 @@
 import textwrap
-from tabulate import tabulate
+
 from dotenv import load_dotenv
-from langchain_core.messages import HumanMessage, SystemMessage
 from langchain.chat_models import init_chat_model
-from langchain_tavily import TavilySearch, TavilyCrawl
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_tavily import TavilyCrawl, TavilySearch
+from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
-from langgraph.graph import START, END, StateGraph
 from langgraph.types import Send
-from ingest import load_config
-from .schema import FundamentalsSchema, MoatSchema, RiskSchema
-from .state import State, FundamentalsState, MoatState, RiskState
-from .tools import ingest_ticker_tool, query_metrics_tool
+from tabulate import tabulate
+
 from config import agent_config
-from .system_prompts import fundamentals_system_prompt, moat_system_prompt, risk_system_prompt
+from ingest import load_config
+
+from .schema import FundamentalsSchema, MoatSchema, RiskSchema
+from .state import FundamentalsState, MoatState, RiskState, State
+from .system_prompts import (
+    fundamentals_system_prompt,
+    moat_system_prompt,
+    risk_system_prompt,
+)
+from .tools import ingest_ticker_tool, query_metrics_tool
 
 load_dotenv()
 load_config()
@@ -28,8 +35,8 @@ assistant_llm = init_chat_model(agent_config.assistant_model, temperature=0)
 fundamentals_extract_llm = assistant_llm.with_structured_output(FundamentalsSchema)
 moat_extract_llm = assistant_llm.with_structured_output(MoatSchema)
 risk_extract_llm = assistant_llm.with_structured_output(RiskSchema)
-    
-    
+
+
 def fundamentals_scoring_node(state: FundamentalsState):
     if not state["messages"]:
         messages = [SystemMessage(content=fundamentals_system_prompt),

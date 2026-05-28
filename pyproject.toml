@@ -29,3 +29,29 @@ dev = [
 
 [tool.ruff]
 exclude = ["*.ipynb"]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "S",   # flake8-bandit (security)
+    "N",   # pep8-naming
+]
+ignore = [
+    "E501",  # line too long (handled by formatter or ignored)
+    "S101",  # assert statements (common in tests)
+    "S311",  # random (non-cryptographic use)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

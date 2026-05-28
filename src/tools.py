@@ -1,6 +1,6 @@
 from langchain_core.tools import StructuredTool
-from ingest import ingest_ticker, query_metrics
 
+from ingest import ingest_ticker, query_metrics
 
 ingest_ticker_tool = StructuredTool.from_function(
     func=ingest_ticker,
