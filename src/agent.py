@@ -1,118 +1,12 @@
 import textwrap
 
-from dotenv import load_dotenv
-from langchain.chat_models import init_chat_model
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_tavily import TavilyCrawl, TavilySearch
 from langgraph.graph import END, START, StateGraph
-from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.types import Send
 from tabulate import tabulate
 
-from config import agent_config
-from ingest import load_config
-
 from .schema import FundamentalsSchema, MoatSchema, RiskSchema
-from .state import FundamentalsState, MoatState, RiskState, State
-from .system_prompts import (
-    fundamentals_system_prompt,
-    moat_system_prompt,
-    risk_system_prompt,
-)
-from .tools import ingest_ticker_tool, query_metrics_tool
-
-load_dotenv()
-load_config()
-
-fundamentals_tools = [ingest_ticker_tool, query_metrics_tool]
-research_tools = [TavilySearch(), TavilyCrawl()]
-
-base_llm = init_chat_model(agent_config.research_model, temperature=0)
-fundamentals_llm = base_llm.bind_tools(fundamentals_tools)
-research_llm = base_llm.bind_tools(research_tools)
-
-assistant_llm = init_chat_model(agent_config.assistant_model, temperature=0)
-fundamentals_extract_llm = assistant_llm.with_structured_output(FundamentalsSchema)
-moat_extract_llm = assistant_llm.with_structured_output(MoatSchema)
-risk_extract_llm = assistant_llm.with_structured_output(RiskSchema)
-
-
-def fundamentals_scoring_node(state: FundamentalsState):
-    if not state["messages"]:
-        messages = [SystemMessage(content=fundamentals_system_prompt),
-                    HumanMessage(content=state["ticker"])]
-        return {"messages": messages + [fundamentals_llm.invoke(messages)]}
-    else:
-        return {"messages": fundamentals_llm.invoke(state["messages"])}
-
-def fundamentals_extract_node(state: FundamentalsState):
-    messages = state["messages"] + [
-        HumanMessage(content="請根據以上研究，以指定格式回傳財務評分結果。")
-    ]
-    return {"fundamentals_result": fundamentals_extract_llm.invoke(messages)}
-
-fundamentals_builder = StateGraph(FundamentalsState)
-fundamentals_builder.add_node("fundamentals_scoring", fundamentals_scoring_node)
-fundamentals_builder.add_node("tools", ToolNode(fundamentals_tools))
-fundamentals_builder.add_node("fundamentals_extract", fundamentals_extract_node)
-fundamentals_builder.add_edge(START, "fundamentals_scoring")
-fundamentals_builder.add_conditional_edges("fundamentals_scoring", tools_condition, {"tools": "tools", "__end__": "fundamentals_extract"})
-fundamentals_builder.add_edge("tools", "fundamentals_scoring")
-fundamentals_builder.add_edge("fundamentals_extract", END)
-fundamentals_subgraph = fundamentals_builder.compile()
-
-
-def moat_research_node(state: MoatState):
-    if not state["messages"]:
-        messages = [SystemMessage(content=moat_system_prompt),
-                    HumanMessage(content=state["ticker"])]
-        return {"messages": messages + [research_llm.invoke(messages)]}
-    else:
-        return {"messages": research_llm.invoke(state["messages"])}
-
-def moat_extract_node(state: MoatState):
-    messages = state["messages"] + [
-        HumanMessage(content="請根據以上研究，以指定格式回傳護城河評分結果。")
-    ]
-    return {"moat_result": moat_extract_llm.invoke(messages)}
-
-
-moat_builder = StateGraph(MoatState)
-moat_builder.add_node("moat_research", moat_research_node)
-moat_builder.add_node("tools", ToolNode(research_tools))
-moat_builder.add_node("moat_extract", moat_extract_node)
-moat_builder.add_edge(START, "moat_research")
-moat_builder.add_conditional_edges("moat_research", tools_condition, {"tools": "tools", "__end__": "moat_extract"})
-moat_builder.add_edge("tools", "moat_research")
-moat_builder.add_edge("moat_extract", END)
-moat_subgraph = moat_builder.compile()
-
-
-def risk_research_node(state: RiskState):
-    if not state["messages"]:
-        messages = [SystemMessage(content=risk_system_prompt),
-                    HumanMessage(content=state["ticker"])]
-        return {"messages": messages + [research_llm.invoke(messages)]}
-    else:
-        return {"messages": research_llm.invoke(state["messages"])}
-
-
-def risk_extract_node(state: RiskState):
-    messages = state["messages"] + [
-        HumanMessage(content="請根據以上研究，以指定格式回傳風險評分結果。")
-    ]
-    return {"risk_result": risk_extract_llm.invoke(messages)}
-
-
-risk_builder = StateGraph(RiskState)
-risk_builder.add_node("risk_research", risk_research_node)
-risk_builder.add_node("tools", ToolNode(research_tools))
-risk_builder.add_node("risk_extract", risk_extract_node)
-risk_builder.add_edge(START, "risk_research")
-risk_builder.add_conditional_edges("risk_research", tools_condition, {"tools": "tools", "__end__": "risk_extract"})
-risk_builder.add_edge("tools", "risk_research")
-risk_builder.add_edge("risk_extract", END)
-risk_subgraph = risk_builder.compile()
+from .state import State
+from .subagents import fundamentals_subgraph, moat_subgraph, risk_subgraph
 
 
 
